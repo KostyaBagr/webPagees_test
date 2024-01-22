@@ -5,13 +5,13 @@ from bs4 import BeautifulSoup
 import datetime
 
 
-async def fetch_html(url, session):
+async def fetch_html(url: str, session) -> None:
     """Получаем html код со страцниы"""
     async with session.get(url) as response:
         return await response.text()
 
 
-async def get_book_data(detail_url, session):
+async def get_book_data(detail_url: str, session) -> dict:
     """Получение детальных данных о книге"""
 
     html = await fetch_html(detail_url, session)
@@ -27,7 +27,7 @@ async def get_book_data(detail_url, session):
     return product_info
 
 
-async def get_all_books(url, session):
+async def parse_page(url: str, session) -> list:
     """Парсим страницу"""
     html = await fetch_html(url, session)
     soup = BeautifulSoup(html, 'lxml')
@@ -46,22 +46,17 @@ async def get_all_books(url, session):
     return books
 
 
-async def save_data(url):
+async def save_data(file_name: str, data: list) -> None:
     """Сохранение данных"""
-    url = url
+    fieldnames = ('Название', 'Цена', 'Наличие', 'Ссылка', 'Характеристики')
 
-    async with aiohttp.ClientSession() as session:
-        books = await get_all_books(url, session)
-
-    curr_time = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    csv_file = f'books_{curr_time}.csv'
-    fieldnames = ['Название', 'Цена', 'Наличие', 'Ссылка', 'Характеристики']
-
-    with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
+    with open(file_name, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(books)
 
+        for item in data:
+            writer.writerow(item)
 
-if __name__ == '__main__':
-    asyncio.run(save_data('https://books.toscrape.com/catalogue/category/books/travel_2/index.html'))
+#
+# if __name__ == '__main__':
+#     asyncio.run(save_data('https://books.toscrape.com/catalogue/category/books/travel_2/index.html'))
